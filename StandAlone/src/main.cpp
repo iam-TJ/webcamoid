@@ -28,6 +28,25 @@
 #include "clioptions.h"
 #include "mediatools.h"
 
+#include <QScreen>
+void reportOrientationChange(QApplication &app)
+{
+    qDebug() << "Screen count:" << QApplication::screens().size();
+	qDebug() << "Primary:" << QApplication::primaryScreen()->name();
+	foreach (QScreen *screen, QApplication::screens()) {
+        auto name = screen->name();
+        qDebug() << "Tracking screen:" << name;
+        screen->setOrientationUpdateMask(
+          Qt::LandscapeOrientation |
+          Qt::PortraitOrientation |
+          Qt::InvertedLandscapeOrientation |
+          Qt::InvertedPortraitOrientation );
+        QObject::connect(screen, &QScreen::orientationChanged, [=] (const Qt::ScreenOrientation &newOrientation) {
+            qDebug() << "Orientation changed for screen" << name << ":" << newOrientation;
+		});
+    }
+}
+
 int main(int argc, char *argv[])
 {
     QApplication::setApplicationName(COMMONS_APPNAME);
@@ -39,6 +58,7 @@ int main(int argc, char *argv[])
     qInstallMessageHandler(MediaTools::messageHandler);
 
     QApplication app(argc, argv);
+	reportOrientationChange(app);
     CliOptions cliOptions;
 
     if (cliOptions.isSet(cliOptions.logFileOpt())) {
